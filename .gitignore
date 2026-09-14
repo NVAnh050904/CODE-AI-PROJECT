@@ -26,10 +26,14 @@ runs/
 logs/
 *.zip
 
-# Ignore heavy video clips except Week 4 demo video
+# Ignore heavy video clips except Week 4 demo video and processed output tracking videos under 50MB
 *.mp4
 *.avi
-!reports/week_04/demo/demo_person_retrieval_filter.mp4
+!reports/week_04/demo/*.mp4
+!reports/week_04/output_videos/real_pedestrians_tracked.mp4
+!reports/week_04/output_videos/person-bicycle-car-detection_tracked.mp4
+!reports/week_04/output_videos/people-detection_tracked.mp4
+!reports/week_04/output_videos/vtest_tracked.mp4
 
 # Ignore crops
 crops/

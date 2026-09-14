@@ -215,6 +215,22 @@ Người dùng có thể tự chạy các câu lệnh kiểm thử lọc đối 
 
 ---
 
+### 5.4. Phân biệt Thư Mục Video Demo Đầu Ra & Thư Mục Video Output Đã Xử Lý
+
+Để dễ dàng phân biệt giữa **Video Demo Trình Diễn Tổng Hợp** và **Các Video Kết Quả Tracking Đã Xử Lý Cho Từng Stream Video Đầu Vào**, thư mục `reports/week_04/` được tổ chức như sau:
+
+1. **Thư mục Video Demo Trình Diễn Engine**: [`reports/week_04/demo/`](file:///c:/Users/ADMIN/OneDrive/Documents/GitHub/AI-Project/reports/week_04/demo/)
+   * [`reports/week_04/demo/demo_person_retrieval_filter.mp4`](file:///c:/Users/ADMIN/OneDrive/Documents/GitHub/AI-Project/reports/week_04/demo/demo_person_retrieval_filter.mp4): Video Demo HD 720p chuyên biệt tiếng Việt (28s, ~5.8 MB) trình chiếu toàn bộ 4 phân cảnh của Video Retrieval Engine (Lọc thuộc tính, Re-ID Cosine Similarity ranking với Target Crop `frame_25.jpg` và khử trùng lặp identity).
+
+2. **Thư mục Video Output Kết Quả Tracking Từng Video Đầu Vào**: [`reports/week_04/output_videos/`](file:///c:/Users/ADMIN/OneDrive/Documents/GitHub/AI-Project/reports/week_04/output_videos/)
+   * [`reports/week_04/output_videos/real_pedestrians_tracked.mp4`](file:///c:/Users/ADMIN/OneDrive/Documents/GitHub/AI-Project/reports/week_04/output_videos/real_pedestrians_tracked.mp4): Video kết quả tracking, gán BBoxes, Track IDs và nhãn UPAR cho luồng CCTV đường phố `real_pedestrians.mp4`.
+   * [`reports/week_04/output_videos/person-bicycle-car-detection_tracked.mp4`](file:///c:/Users/ADMIN/OneDrive/Documents/GitHub/AI-Project/reports/week_04/output_videos/person-bicycle-car-detection_tracked.mp4): Video kết quả tracking cho luồng CCTV giao lộ `person-bicycle-car-detection.mp4`.
+   * [`reports/week_04/output_videos/vtest_tracked.mp4`](file:///c:/Users/ADMIN/OneDrive/Documents/GitHub/AI-Project/reports/week_04/output_videos/vtest_tracked.mp4): Video kết quả tracking cho luồng CCTV ngoài trời `vtest.avi`.
+   * [`reports/week_04/output_videos/people-detection_tracked.mp4`](file:///c:/Users/ADMIN/OneDrive/Documents/GitHub/AI-Project/reports/week_04/output_videos/people-detection_tracked.mp4): Video kết quả tracking cho video thử nghiệm `people-detection.mp4`.
+   * `reports/week_04/output_videos/store-aisle-detection_tracked.mp4`: Video kết quả tracking cho luồng CCTV siêu thị `store-aisle-detection.mp4`.
+
+---
+
 ## 6. Kết luận & Hướng phát triển tiếp theo
 
 ### Kết luận Tuần 4
