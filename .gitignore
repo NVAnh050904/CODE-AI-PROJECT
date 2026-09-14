@@ -1,0 +1,40 @@
+# Python / Cache
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.venv/
+venv/
+env/
+
+# IDE / Editor
+.vscode/
+.idea/
+
+# Ignore legacy datasets, scratch, and previous week modules
+3 Datasets/
+UPAR_UNIFIED/
+scratch/
+checkpoints/
+configs/
+datasets/
+models/
+training/
+inference/
+tests/
+runs/
+logs/
+*.zip
+
+# Ignore heavy video clips except Week 4 demo video
+*.mp4
+*.avi
+!reports/week_04/demo/demo_person_retrieval_filter.mp4
+
+# Ignore crops
+crops/
+tracking/crops/
+reports/tracking/crops/
+
+# Environment variables & secrets
+.env
