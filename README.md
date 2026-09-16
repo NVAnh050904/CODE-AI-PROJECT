@@ -20,29 +20,29 @@ Hệ thống cho phép:
 
 ```mermaid
 flowchart TD
-    subgraph StreamInput ["1. Video Surveillance Stream Input"]
-        V1["Video CCTV Stream (.mp4 / .avi)"]
+    subgraph StreamInput ["1. Luồng Dữ Liệu Video Vào (Video Input)"]
+        V1["Luồng Video CCTV Giám sát (.mp4 / .avi)"]
     end
 
-    subgraph CorePipeline ["2. Pipeline Xử lý Video (Level 1 - Level 3)"]
-        Tracking["YOLOv8 + ByteTrack\n(Tracking & Trajectory)"]
-        AttrEngine["UPAR Multi-Head Model\n(Soft-Probability Mean Pooling)"]
-        ReIDEngine["OSNet 512-dim Extractor\n(Re-ID Feature Vector)"]
+    subgraph CorePipeline ["2. Pipeline Xử Lý Video (Level 1 - Level 3)"]
+        Tracking["Theo Vết & Quỹ Đạo\n(YOLOv8 + ByteTrack)"]
+        AttrEngine["Dự Đoán Thuộc Tính UPAR Multi-Head\n(Gom Nhóm Xác Suất Temporal Mean Pooling)"]
+        ReIDEngine["Trích Xuất Vector Đặc Trưng Re-ID\n(Mô hình OSNet 512 chiều)"]
     end
 
-    subgraph CentralDB ["3. CSDL Video Trung tâm"]
-        DBJSON["person_database.json\n(57 Video Track Records + Representative Crops)"]
+    subgraph CentralDB ["3. Cơ Sở Dữ Liệu Video Trung Tâm"]
+        DBJSON["Cơ Sở Dữ Liệu person_database.json\n(57 Bản Ghi Video Tracks + Ảnh Crop Đại Diện)"]
     end
 
-    subgraph SearchEngine ["4. Engine Lọc & Truy vấn Đối tượng (Level 5 - query_persons.py)"]
-        AttrFilter["Attribute Filter Engine\n(Gender, Age, Colors, Accessories)"]
-        ReIDRank["OSNet Cosine Similarity Ranking\n(So khớp ảnh mẫu Query Target)"]
-        GTDedup["NetworkX GT Identity Deduplication\n(Gom nhóm đoạn track ngắt đứt)"]
+    subgraph SearchEngine ["4. Engine Lọc & Truy Vấn Đối Tượng (Level 5 - query_persons.py)"]
+        AttrFilter["Bộ Lọc Thuộc Tính\n(Giới tính, Độ tuổi, Màu trang phục, Phụ kiện)"]
+        ReIDRank["Xếp Hạng Cosine Similarity\n(So khớp với ảnh mẫu Query Target)"]
+        GTDedup["Khử Trùng Lặp Ground-Truth Identity\n(Gom nhóm đoạn track ngắt đứt bằng NetworkX)"]
     end
 
-    subgraph OutputVisual ["5. Kết quả Đầu ra (Visual Outputs)"]
-        GridImg["Lưới ảnh kết quả (query_result_*.png)"]
-        DemoVideo["Video Demo Trực quan hóa (.mp4)"]
+    subgraph OutputVisual ["5. Trực Quan Hóa Kết Quả Đầu Ra"]
+        GridImg["Lưới Ảnh Kết Quả Truy Vấn (query_result_*.png)"]
+        DemoVideo["Video Demo Trực Quan Hóa (.mp4)"]
     end
 
     StreamInput --> Tracking

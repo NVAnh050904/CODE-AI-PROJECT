@@ -20,30 +20,30 @@ Hệ thống gốc **UPAR Multi-Head PAR** dừng lại ở việc nhận diện
 
 ```mermaid
 flowchart TD
-    subgraph L1 ["Level 1: Detection & Tracking"]
-        V["Input Video Stream / File"] --> YOLO["YOLOv8n (Pre-trained COCO)"]
-        YOLO --> BT["ByteTrack Association"]
-        BT --> TCSV["Raw Tracks CSV\n(frame_id, track_id, bbox, conf)"]
+    subgraph L1 ["Level 1: Phát hiện & Theo vết (Detection & Tracking)"]
+        V["File / Luồng Video Đầu Vào"] --> YOLO["Mô hình YOLOv8n (Pre-trained COCO)"]
+        YOLO --> BT["Liên kết Quỹ đạo ByteTrack"]
+        BT --> TCSV["File CSV Tracks Thô\n(frame_id, track_id, bbox, conf)"]
     end
 
-    subgraph L2 ["Level 2: Attribute Aggregation"]
-        TCSV --> Ext["Crop Extractor\n(tracking/extract_crops.py)"]
-        Ext --> Crops["Person Crops per Track"]
-        Crops --> PAR["UPAR Multi-Head Model\n(checkpoints/hydraplus_upar_best.pth)"]
-        PAR --> Pool["Temporal Soft-Probability Mean Pooling"]
-        Pool --> TAttr["Track Attributes JSON & CSV\n(reports/tracking/<ten_video>/attributes.json)"]
+    subgraph L2 ["Level 2: Gom nhóm Thuộc tính (Attribute Aggregation)"]
+        TCSV --> Ext["Trích Xuất Crop Ảnh Người\n(tracking/extract_crops.py)"]
+        Ext --> Crops["Tập Crop Ảnh Người theo Track ID"]
+        Crops --> PAR["Mô hình UPAR Multi-Head PAR\n(checkpoints/hydraplus_upar_best.pth)"]
+        PAR --> Pool["Gom Nhóm Xác Suất Mềm Qua Thời Gian\n(Temporal Soft-Probability Mean Pooling)"]
+        Pool --> TAttr["File Xuất Thuộc tính Track JSON & CSV\n(reports/tracking/<ten_video>/attributes.json)"]
     end
 
-    subgraph L3 ["Level 3: Re-ID Feature Extraction & Evaluation"]
-        Crops --> OSNet["OSNet (osnet_x1_0 MSMT17)"]
-        OSNet --> Emb["512-dim Feature Vectors per Track"]
-        Emb --> EvalReID["Scientific Validation Pipeline\n(Pseudo-replication fix + Bootstrap CI)"]
+    subgraph L3 ["Level 3: Trích xuất Embedding Re-ID & Kiểm thử"]
+        Crops --> OSNet["Mô hình Re-ID OSNet (osnet_x1_0 MSMT17)"]
+        OSNet --> Emb["Vector Đặc Trưng 512 Chiều theo Track"]
+        Emb --> EvalReID["Pipeline Kiểm Thử Thực Nghiệm Khoa Học\n(Khử lỗi Pseudo-replication + Bootstrap CI)"]
     end
 
-    subgraph L4 ["Level 4: Hybrid Matching & Verification"]
-        Emb & TAttr & TCSV --> Hybrid["Hybrid Matcher\n(Re-ID + Attribute + Time Penalty)"]
-        Hybrid --> LOOCV["LOOCV Grid Search Evaluation"]
-        LOOCV --> Final["Person Re-entry & Retrieval Results"]
+    subgraph L4 ["Level 4: So khớp Lai & Kiểm toán LOOCV (Hybrid Matching)"]
+        Emb & TAttr & TCSV --> Hybrid["Bộ So Khớp Lai Hybrid Matcher\n(Re-ID + Thuộc tính UPAR + Phạt Thời Gian Time Penalty)"]
+        Hybrid --> LOOCV["Đánh giá Grid Search Tối Ưu LOOCV"]
+        LOOCV --> Final["Kết Quả Nhận Diện Lại Đối Tượng & Truy Vấn (Re-entry & Retrieval)"]
     end
 ```
 
