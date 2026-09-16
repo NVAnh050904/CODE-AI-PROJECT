@@ -34,6 +34,12 @@ demo_output_dir = base_dir / "reports" / "tracking" / "demo"
 test_videos_dir.mkdir(parents=True, exist_ok=True)
 demo_output_dir.mkdir(parents=True, exist_ok=True)
 
+# Khởi tạo session state để lưu trữ video đang phát giữa các lần rerun (như khi bấm nút Lọc)
+if "active_video_name" not in st.session_state:
+    st.session_state["active_video_name"] = None
+if "active_video_path" not in st.session_state:
+    st.session_state["active_video_path"] = None
+
 # SIDEBAR: Cấu hình
 st.sidebar.header("⚙️ Cấu Hình Hệ Thống")
 source_type = st.sidebar.selectbox("Chọn nguồn", ["Tải lên file video"])
@@ -122,14 +128,10 @@ with col1:
 
                     final_video_path = converted_path if (converted_path.exists() and converted_path.stat().st_size > 0) else demo_file_path
                     status_msg.success(f"✅ Hoàn tất toàn bộ trong {elapsed:.1f} giây! Mời bạn xem kết quả bên dưới.")
-                    st.video(str(final_video_path))
-
-                    # Hiển thị thêm bảng thống kê thuộc tính bên dưới video
-                    summary_csv = base_dir / "reports" / "tracking" / video_name / "tracked_persons_summary.csv"
-                    if summary_csv.exists():
-                        st.markdown("#### 📊 Bảng Thống Kê Thuộc Tính Các Đối Tượng Trong Video")
-                        df_summary = pd.read_csv(summary_csv)
-                        st.dataframe(df_summary[["track_id", "gender", "age", "upper_color", "lower_color", "bag"]], use_container_width=True)
+                    
+                    # Lưu thông tin video vừa xử lý vào session state để không bị biến mất khi bấm Lọc
+                    st.session_state["active_video_name"] = video_name
+                    st.session_state["active_video_path"] = str(final_video_path)
                 else:
                     st.error("Không tìm thấy file video kết quả đầu ra trong thư mục reports/tracking/demo/.")
             else:
@@ -137,7 +139,21 @@ with col1:
                 st.code(process.stderr if process.stderr else process.stdout)
         else:
             status_msg.warning("⚠️ Vui lòng tải lên một file video!")
-    else:
+
+    # HIỂN THỊ VIDEO & BẢNG THỐNG KÊ (Duy trì liên tục qua st.session_state kể cả khi bấm Lọc)
+    active_path = st.session_state.get("active_video_path")
+    active_name = st.session_state.get("active_video_name")
+
+    if active_path and Path(active_path).exists():
+        st.markdown(f"#### 📺 Video Kết Quả Pipeline (`{active_name}`)")
+        st.video(active_path)
+
+        summary_csv = base_dir / "reports" / "tracking" / active_name / "tracked_persons_summary.csv" if active_name else None
+        if summary_csv and summary_csv.exists():
+            st.markdown("#### 📊 Bảng Thống Kê Thuộc Tính Các Đối Tượng Trong Video")
+            df_summary = pd.read_csv(summary_csv)
+            st.dataframe(df_summary[["track_id", "gender", "age", "upper_color", "lower_color", "bag"]], use_container_width=True)
+    elif not run_system:
         st.info("Bấm 'Khởi chạy Pipeline AI' để hệ thống bắt đầu chạy 5 bước xử lý.")
 
 with col2:
