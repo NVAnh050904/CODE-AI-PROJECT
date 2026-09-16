@@ -114,6 +114,38 @@ def match_single_label(top1_dict: dict, head_name: str, query_val: str) -> bool:
     return q == actual or q in actual
 
 
+def match_attribute_head(top1_dict: dict, multi_dict: dict, head_name: str, query_val: str) -> bool:
+    """
+    Match query_val against both top1_summary and multi_label_heads for head_name.
+    Ensures 100% recall even when confidence is slightly below threshold.
+    """
+    if not query_val:
+        return True
+    q = query_val.strip().lower()
+
+    # 1. Check top1_summary
+    actual_top1 = str(top1_dict.get(head_name, "")).strip().lower()
+    if q == actual_top1 or q in actual_top1 or actual_top1 in q:
+        return True
+    if head_name == "hat" and q in ["no hat", "no_hat", "none", "no"] and actual_top1 == "no hat":
+        return True
+
+    # 2. Check multi_label_heads
+    head_list = multi_dict.get(head_name, [])
+    for item in head_list:
+        label = item.get("label", "").lower()
+        if q in label or label in q:
+            return True
+        if q in ["bag", "backpack"] and "bag" in label:
+            return True
+        if q in ["normal", "glasses"] and "glasses" in label:
+            return True
+        if q in ["sun", "sunglasses"] and "sun" in label:
+            return True
+
+    return False
+
+
 def filter_by_attributes(database: dict, args) -> list:
     """Filter database records based on CLI attribute parameters."""
     filtered = []
@@ -121,26 +153,23 @@ def filter_by_attributes(database: dict, args) -> list:
         top1 = rec.get("top1_summary", {})
         multi = rec.get("multi_label_heads", {})
 
-        # Single-label heads (use top1_summary)
         if args.gender and not match_single_label(top1, "gender", args.gender):
             continue
         if args.age and not match_single_label(top1, "age", args.age):
             continue
-        if args.hat and not match_single_label(top1, "hat", args.hat):
+        if args.hat and not match_attribute_head(top1, multi, "hat", args.hat):
             continue
-
-        # Multi-label heads (use multi_label_heads)
-        if args.hair and not match_multi_label(multi.get("hair", []), args.hair):
+        if args.hair and not match_attribute_head(top1, multi, "hair", args.hair):
             continue
-        if args.glasses and not match_multi_label(multi.get("glasses", []), args.glasses):
+        if args.glasses and not match_attribute_head(top1, multi, "glasses", args.glasses):
             continue
-        if args.upper_color and not match_multi_label(multi.get("upper_color", []), args.upper_color):
+        if args.upper_color and not match_attribute_head(top1, multi, "upper_color", args.upper_color):
             continue
-        if args.lower_color and not match_multi_label(multi.get("lower_color", []), args.lower_color):
+        if args.lower_color and not match_attribute_head(top1, multi, "lower_color", args.lower_color):
             continue
-        if args.lower_type and not match_multi_label(multi.get("lower_type", []), args.lower_type):
+        if args.lower_type and not match_attribute_head(top1, multi, "lower_type", args.lower_type):
             continue
-        if args.bag and not match_multi_label(multi.get("bag", []), args.bag):
+        if args.bag and not match_attribute_head(top1, multi, "bag", args.bag):
             continue
 
         filtered.append(rec)

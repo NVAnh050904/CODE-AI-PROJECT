@@ -181,10 +181,31 @@ with st.expander("🔍 Engine Lọc & Truy Vấn Đối Tượng Trong CSDL Vide
             st.success("Truy vấn thành công!")
             st.code(res_q.stdout, language="text")
             
-            # Hiển thị ảnh grid kết quả nếu có
+            # Hiển thị chính xác ảnh grid kết quả vừa được tạo
             grid_dir = base_dir / "reports" / "tracking" / "query_results"
-            grid_imgs = sorted(list(grid_dir.glob("query_result_*.png")), key=os.path.getmtime, reverse=True)
-            if grid_imgs:
-                st.image(str(grid_imgs[0]), caption="Lưới ảnh kết quả lọc đối tượng", use_container_width=True)
+            
+            target_img_path = None
+            # 1. Trích xuất đường dẫn file trực tiếp từ stdout của query_persons.py
+            for line in res_q.stdout.splitlines():
+                if "[OUTPUT GRID IMAGE]" in line and "'" in line:
+                    parts = line.split("'")
+                    if len(parts) >= 2:
+                        cand = base_dir / parts[1]
+                        if cand.exists():
+                            target_img_path = cand
+                            break
+
+            # 2. Fallback lấy file ảnh kết quả mới nhất (result_*.png hoặc query_result_*.png)
+            if target_img_path is None:
+                all_imgs = sorted(
+                    list(grid_dir.glob("result_*.png")) + list(grid_dir.glob("query_result_*.png")),
+                    key=os.path.getmtime,
+                    reverse=True
+                )
+                if all_imgs:
+                    target_img_path = all_imgs[0]
+
+            if target_img_path and target_img_path.exists():
+                st.image(str(target_img_path), caption=f"Lưới ảnh kết quả lọc đối tượng ({target_img_path.name})", use_container_width=True)
         else:
             st.error("Có lỗi xảy ra khi truy vấn CSDL.")
