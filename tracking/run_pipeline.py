@@ -152,6 +152,13 @@ def main():
     ]
     run_command(cmd_5, "5. Demo Combined Video Generation")
 
+    # Step 6: build_person_database.py (Automated central database update)
+    cmd_6 = [
+        python_exe, str(base_dir / "tracking" / "build_person_database.py"),
+        "--add-video", video_name
+    ]
+    run_command(cmd_6, "6. Central Person Database Auto-Update (person_database.json)")
+
     total_pipeline_elapsed = time.time() - total_pipeline_start
 
     # Determine output demo path

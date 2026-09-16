@@ -201,34 +201,26 @@ def process_video_directory(video_dir: Path) -> list:
 
 
 def rebuild_all_database() -> dict:
-    """Read attributes.json ONLY for the 5 official videos in OFFICIAL_VIDEOS."""
-    print("[INFO] Rebuilding person database from scratch for OFFICIAL_VIDEOS...")
+    """Read attributes.json for all valid video directories in TRACKING_DIR."""
+    print("[INFO] Rebuilding person database from scratch for all processed video directories...")
 
-    # Check for unlisted video directories that contain attributes.json
-    unlisted = []
+    video_dirs = []
     for d in TRACKING_DIR.iterdir():
-        if d.is_dir() and d.name not in SYSTEM_DIRS and d.name not in OFFICIAL_VIDEOS:
+        if d.is_dir() and d.name not in SYSTEM_DIRS:
             if (d / "attributes.json").exists():
-                unlisted.append(d.name)
+                video_dirs.append(d.name)
 
-    if unlisted:
-        print("\n" + "!" * 75)
-        print(f"[CẢNH BÁO] Phát hiện các thư mục có attributes.json nhưng KHÔNG nằm trong OFFICIAL_VIDEOS:")
-        for u in unlisted:
-            print(f"  - {u}")
-        print("Các video này sẽ KHÔNG được đưa vào person_database.json.")
-        print("!" * 75 + "\n")
+    video_dirs = sorted(video_dirs)
+    print(f"[INFO] Found {len(video_dirs)} video directory(ies) with attributes.json: {', '.join(video_dirs)}")
 
     database = {}
-    for v_name in OFFICIAL_VIDEOS:
+    for v_name in video_dirs:
         v_dir = TRACKING_DIR / v_name
         if v_dir.exists() and (v_dir / "attributes.json").exists():
             records = process_video_directory(v_dir)
             for r in records:
                 database[r["global_id"]] = r
-            print(f"  - Đã nạp {len(records):2d} tracks từ video chính thức '{v_name}'")
-        else:
-            print(f"  - [CẢNH BÁO] Không tìm thấy thư mục video chính thức '{v_name}' hoặc attributes.json!")
+            print(f"  - Đã nạp {len(records):2d} tracks từ video '{v_name}'")
 
     save_database(database)
     return database
@@ -257,24 +249,26 @@ def load_database() -> dict:
 def add_video_to_database(video_name: str):
     """
     Thêm hoặc cập nhật bản ghi video trong person_database.json.
-    Từ chối các video không nằm trong danh sách OFFICIAL_VIDEOS.
+    Tự động đọc attributes.json của video_name và đưa vào CSDL trung tâm.
     """
-    if video_name not in OFFICIAL_VIDEOS:
-        print("\n" + "!" * 80)
-        print(f"[TỪ CHỐI THỰC HIỆN] Video '{video_name}' không thuộc nhóm chính thức")
-        print("(xem reports/tracking/_exploration_archive/README.md).")
-        print("Nếu muốn đưa vào CSDL chính thức, cần xác nhận lại ground-truth trước.")
-        print("!" * 80 + "\n")
-        sys.exit(1)
+    video_dir = TRACKING_DIR / video_name
+    if not video_dir.exists() or not (video_dir / "attributes.json").exists():
+        # Try fuzzy match if exact folder name differs by hyphens/underscores
+        found_dir = find_crop_folder_for_video(video_name)
+        if found_dir:
+            v_parent = TRACKING_DIR / found_dir.name
+            if (v_parent / "attributes.json").exists():
+                video_dir = v_parent
+                video_name = found_dir.name
+
+    if not video_dir.exists() or not (video_dir / "attributes.json").exists():
+        print(f"[WARNING] Video directory or attributes.json not found for '{video_name}' at '{video_dir}'")
+        return
 
     database = load_database()
     if database is None:
         print(f"[NOTICE] Database not found. Rebuilding all first...")
         database = rebuild_all_database()
-
-    video_dir = TRACKING_DIR / video_name
-    if not video_dir.exists() or not (video_dir / "attributes.json").exists():
-        raise FileNotFoundError(f"[ERROR] Video directory or attributes.json not found at '{video_dir}'")
 
     count_before = len(database)
 
