@@ -92,25 +92,37 @@ with col1:
                 demo_file_path = demo_output_dir / demo_file_name
                 
                 if demo_file_path.exists():
-                    status_msg.info("⏳ AI đã xong! Đang tinh chỉnh định dạng video sang chuẩn Web (H.264), vui lòng đợi vài giây...")
+                    converted_path = demo_output_dir / f"web_ready_{demo_file_name}"
                     
-                    try:
-                        # Cập nhật cú pháp cho moviepy phiên bản mới (v2.x)
-                        from moviepy import VideoFileClip
-                        converted_path = demo_output_dir / f"web_ready_{demo_file_name}"
+                    if not converted_path.exists() or converted_path.stat().st_size == 0:
+                        status_msg.info("⏳ AI đã xong! Đang chuyển đổi mã hóa video sang chuẩn H.264 Web-Ready...")
                         
-                        clip = VideoFileClip(str(demo_file_path))
-                        # Tắt logger để terminal không bị tràn log hiển thị
-                        clip.write_videofile(str(converted_path), codec="libx264", audio=False, logger=None)
-                        clip.close()
-                        
-                        status_msg.success(f"✅ Hoàn tất toàn bộ trong {elapsed:.1f} giây! Mời bạn xem kết quả bên dưới.")
-                        
-                        # Phát file đã được convert lên giao diện
-                        st.video(str(converted_path))
-                    except Exception as e:
-                        status_msg.warning(f"Đang phát video bản gốc... (Chi tiết: {e})")
-                        st.video(str(demo_file_path))
+                        # Thử dùng imageio_ffmpeg trực tiếp (Nhanh & 100% không lỗi)
+                        try:
+                            import imageio_ffmpeg
+                            ffmpeg_exe = imageio_ffmpeg.get_ffmpeg_exe()
+                            ff_cmd = [
+                                ffmpeg_exe, "-y", "-i", str(demo_file_path),
+                                "-c:v", "libx264", "-pix_fmt", "yuv420p",
+                                "-an", str(converted_path)
+                            ]
+                            subprocess.run(ff_cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=True)
+                        except Exception as e_ff:
+                            # Thử dùng moviepy nếu ffmpeg gặp sự cố
+                            try:
+                                try:
+                                    from moviepy import VideoFileClip
+                                except ImportError:
+                                    from moviepy.editor import VideoFileClip
+                                clip = VideoFileClip(str(demo_file_path))
+                                clip.write_videofile(str(converted_path), codec="libx264", audio=False, logger=None)
+                                clip.close()
+                            except Exception as e_mv:
+                                status_msg.warning(f"Đang phát video bản gốc... (Lỗi: {e_mv})")
+
+                    final_video_path = converted_path if (converted_path.exists() and converted_path.stat().st_size > 0) else demo_file_path
+                    status_msg.success(f"✅ Hoàn tất toàn bộ trong {elapsed:.1f} giây! Mời bạn xem kết quả bên dưới.")
+                    st.video(str(final_video_path))
 
                     # Hiển thị thêm bảng thống kê thuộc tính bên dưới video
                     summary_csv = base_dir / "reports" / "tracking" / video_name / "tracked_persons_summary.csv"
