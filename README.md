@@ -53,6 +53,59 @@ flowchart TD
     GTDedup --> GridImg & DemoVideo
 ```
 
+### 2.1. Tổng quan Kiến trúc Mô hình UnifiedPARModel (Cấu trúc 2 Tầng Phân cấp)
+
+Mô hình **`UnifiedPARModel`** ([`models/hydraplus/par_model.py`](file:///c:/Users/ADMIN/OneDrive/Documents/GitHub/AI-Project/models/hydraplus/par_model.py)) được thiết kế theo kiến trúc Multi-Head 2 Tầng Phân cấp (2-Level Hierarchy):
+
+- **Shared Backbone & Spatial Attention**: Sử dụng ResNet50 trích xuất Feature Map (2048-dim), nạp qua cơ chế Spatial Attention và layer LayerNorm + Dropout tạo ra Feature Vector đại diện chung 512 chiều (`shared_repr`).
+- **Tầng 1 (Body Regions - 5 Vùng cơ thể)**: Nhóm 40 thuộc tính UPAR theo phân vùng ngữ nghĩa thị giác:
+  1. `PERSON` (Toàn thân: Age, Gender)
+  2. `HEAD` (Vùng đầu: Hair)
+  3. `UPPER BODY` (Thân trên: Upper Length, Upper Color)
+  4. `LOWER BODY` (Thân dưới: Lower Length, Lower Color, Lower Type)
+  5. `ACCESSORY` (Phụ kiện: Bag, Glasses, Hat)
+- **Tầng 2 (Classification Heads - 11 Đầu ra phân loại)**: 11 nhánh kỹ thuật độc lập với số chiều đầu ra và hàm Loss tối ưu cho từng loại thuộc tính (Binary BCE, Multi-class Softmax, Multi-label Masked BCE).
+
+```mermaid
+flowchart TD
+    subgraph InputBackbone ["1. Input & Shared Feature Representation Layer"]
+        Img["Input Pedestrian Crop\n(256 x 128 x 3)"] --> ResNet["ResNet50 Shared Backbone\n(Feature Map: 2048 x 8 x 4)"]
+        ResNet --> Attn["Spatial Attention Module\n(Residual Weighting Map)"]
+        Attn --> Pool["Adaptive Avg Pooling & Flatten\n(Vector 2048-dim)"]
+        Pool --> Proj["Shared Projection Layer\n(Linear 2048 -> 512 + LayerNorm + Dropout)"]
+    end
+
+    subgraph Level1 ["2. Tầng 1: Phân Phối Vùng Cơ Thể (5 Body Regions)"]
+        Proj --> R_Person["1. PERSON\n(Toàn thân: Age, Gender)"]
+        Proj --> R_Head["2. HEAD\n(Vùng đầu: Hair)"]
+        Proj --> R_Upper["3. UPPER BODY\n(Thân trên: Upper Length, Color)"]
+        Proj --> R_Lower["4. LOWER BODY\n(Thân dưới: Lower Length, Color, Type)"]
+        Proj --> R_Accessory["5. ACCESSORY\n(Phụ kiện: Bag, Glasses, Hat)"]
+    end
+
+    subgraph Level2 ["3. Tầng 2: 11 Classification Heads (Task-Specific Outputs & Loss)"]
+        R_Person --> H_Age["age Head (3-dim)\nSoftmax | Asymmetric Loss"]
+        R_Person --> H_Gender["gender Head (1-dim)\nSigmoid | Weighted BCE Loss"]
+
+        R_Head --> H_Hair["hair Head (3-dim)\nSigmoid | Masked BCE Loss"]
+
+        R_Upper --> H_ULen["upper_length Head (1-dim)\nSigmoid | Weighted BCE Loss"]
+        R_Upper --> H_UCol["upper_color Head (12-dim)\nSigmoid | Masked BCE Loss"]
+
+        R_Lower --> H_LLen["lower_length Head (1-dim)\nSigmoid | Weighted BCE Loss"]
+        R_Lower --> H_LCol["lower_color Head (12-dim)\nSigmoid | Masked BCE Loss"]
+        R_Lower --> H_LType["lower_type Head (2-dim)\nSigmoid | Masked BCE Loss"]
+
+        R_Accessory --> H_Bag["bag Head (2-dim)\nSigmoid | Masked BCE Loss"]
+        R_Accessory --> H_Glasses["glasses Head (2-dim)\nSigmoid | Masked BCE Loss"]
+        R_Accessory --> H_Hat["hat Head (1-dim)\nSigmoid | Weighted BCE Loss"]
+    end
+
+    subgraph OutputVector ["4. Concatenation Vector Đầu Ra 40 Thuộc Tính UPAR"]
+        H_Age & H_Gender & H_Hair & H_ULen & H_UCol & H_LLen & H_LCol & H_LType & H_Bag & H_Glasses & H_Hat --> Out40["Vector 40 Xác Suất Thuộc Tính UPAR Raw\n(40-dim UPAR Probability Vector)"]
+    end
+```
+
 ---
 
 ## 3. Cấu trúc Thư mục Dự án (Directory Structure)
