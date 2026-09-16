@@ -1,0 +1,17 @@
+==================================================
+VALIDATION REPORT - UNIFIED UPAR DATASET
+==================================================
+
+Status: PASS
+Total Samples: 145656
+Labels Shape: (145656, 40)
+Attribute Count: 40
+Dataset IDs Present: [np.int64(0), np.int64(1), np.int64(2)]
+RAP2 Included: NO
+Label Values Present: [np.int32(0), np.int32(1)]
+Existing Images on Disk: 128291
+Missing Images on Disk: 17365
+Duplicate Paths: 0
+Duplicate Filenames: 0
+
+No structural errors found.

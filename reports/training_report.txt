@@ -1,0 +1,31 @@
+========================================
+MULTI-HEAD PAR MODEL UPAR_UNIFIED TRAINING REPORT
+========================================
+
+Dataset: UPAR_UNIFIED (Market1501 + PA100k + PETA)
+Model: UnifiedPARModel (Multi-Head 11 Heads)
+Backbone: resnet50
+Number of attributes: 40
+Train samples: 100593
+Val samples: 15021
+Test samples: 30042
+Batch size: 64
+Learning rate: 0.0003
+Epochs trained: 10
+Best epoch: 7
+Best validation mA: 83.19%
+Test mA: 82.76%
+Test F1: 63.04%
+
+Head Metrics (Accuracy / F1):
+  - age            : Acc = 96.41%, F1 = 96.41%
+  - gender         : Acc = 91.28%, F1 = 89.74%
+  - hair           : Acc = 92.95%, F1 = 89.13%
+  - upper_length   : Acc = 92.67%, F1 = 93.89%
+  - upper_color    : Acc = 95.12%, F1 = 72.82%
+  - lower_length   : Acc = 95.33%, F1 = 93.20%
+  - lower_color    : Acc = 95.15%, F1 = 71.99%
+  - lower_type     : Acc = 94.39%, F1 = 94.40%
+  - bag            : Acc = 83.40%, F1 = 67.15%
+  - glasses        : Acc = 90.07%, F1 = 49.32%
+  - hat            : Acc = 97.67%, F1 = 72.36%

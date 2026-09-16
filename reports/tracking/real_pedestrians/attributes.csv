@@ -1,0 +1,8 @@
+track_id,n_frames_used,age,age_conf,gender,gender_conf,hair,hair_conf,glasses,glasses_conf,hat,hat_conf,upper_length,upper_length_conf,upper_color,upper_color_conf,lower_length,lower_length_conf,lower_color,lower_color_conf,lower_type,lower_type_conf,bag,bag_conf
+1,11,Adult,0.9784,Female,0.9489,Long,0.9151,None,0.014,No Hat,1.0,Short,0.5168,Black,0.742,Long,0.8055,White,0.2901,Skirt&Dress,0.937,Bag,0.5948
+2,13,Adult,0.8454,Female,0.743,Short,0.6155,None,0.0275,No Hat,0.9867,Long,0.5784,Blue,0.5215,Long,0.9586,Grey,0.4693,Skirt&Dress,0.6964,Bag,0.565
+4,11,Adult,0.9545,Male,0.9863,Short,0.9201,None,0.288,No Hat,0.9998,Short,0.7439,Black,0.7902,Long,0.9326,Black,0.5903,Trousers&Shorts,0.9952,None,0.2201
+7,12,Adult,0.6285,Male,0.8887,Short,0.788,None,0.061,No Hat,0.9882,Long,0.8242,Grey,0.8271,Long,0.9808,Black,0.7581,Trousers&Shorts,0.8775,None,0.4117
+8,11,Old,0.6792,Male,0.5655,Short,0.4793,None,0.0078,No Hat,0.9131,Long,0.543,White,0.8052,Long,0.9332,Black,0.6611,Trousers&Shorts,0.9361,None,0.458
+10,11,Adult,0.9789,Female,0.9903,Long,0.9471,None,0.0096,No Hat,0.9999,Short,0.6373,Black,0.7629,Long,0.6113,Black,0.4736,Skirt&Dress,0.7391,Bag,0.5484
+11,6,Adult,0.552,Male,0.691,Short,0.5175,None,0.0113,No Hat,0.9844,Long,0.968,White,0.6847,Long,0.9493,Grey,0.4448,Trousers&Shorts,0.9343,Bag,0.6876

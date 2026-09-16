@@ -11,34 +11,30 @@ env/
 .vscode/
 .idea/
 
-# Ignore legacy datasets, scratch, and previous week modules
-3 Datasets/
-UPAR_UNIFIED/
+# Scratch & Temporary
 scratch/
-checkpoints/
-configs/
-datasets/
-models/
-training/
-inference/
-tests/
 runs/
 logs/
 *.zip
 
-# Ignore heavy video clips except Week 4 demo video and processed output tracking videos under 50MB
-*.mp4
-*.avi
-!reports/week_04/demo/*.mp4
-!reports/week_04/output_videos/real_pedestrians_tracked.mp4
-!reports/week_04/output_videos/person-bicycle-car-detection_tracked.mp4
-!reports/week_04/output_videos/people-detection_tracked.mp4
-!reports/week_04/output_videos/vtest_tracked.mp4
+# Ignore large raw & processed datasets (keep datasets/upar/ code and datasets/README.md)
+3 Datasets/
+UPAR_UNIFIED/
+datasets/raw/
+datasets/processed/
 
-# Ignore crops
+# Ignore large model weights / checkpoints binaries
+checkpoints/*.pth
+checkpoints/*.pt
+
+# Ignore crop image folders
 crops/
 tracking/crops/
 reports/tracking/crops/
+
+# Ignore heavy video files
+*.mp4
+*.avi
 
 # Environment variables & secrets
 .env

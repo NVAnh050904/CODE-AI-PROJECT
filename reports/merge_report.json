@@ -1,0 +1,21 @@
+{
+    "dataset_title": "UNIFIED UPAR DATASET (Market1501 + PA100k + PETA)",
+    "total_samples": 145656,
+    "attribute_count": 40,
+    "dataset_breakdown": {
+        "Market1501": 29382,
+        "PA100k": 98909,
+        "PETA": 17365
+    },
+    "partition_breakdown": {
+        "train": 100593,
+        "val": 15021,
+        "test": 30042
+    },
+    "label_value_counts": {
+        "0_Negative": 4813004,
+        "1_Positive": 1013236,
+        "2_Unknown": 0
+    },
+    "rap2_included": false
+}

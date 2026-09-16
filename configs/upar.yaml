@@ -1,0 +1,44 @@
+# UPAR_UNIFIED Pedestrian Attribute Recognition (PAR) Config
+
+dataset:
+  name: UPAR_UNIFIED
+  unified_root: "datasets/processed/UPAR_UNIFIED"
+  image_roots:
+    - "datasets/raw"
+    - "datasets/processed/UPAR_UNIFIED"
+    - "3 Datasets"
+    - "UPAR_UNIFIED"
+  img_height: 256
+  img_width: 128
+  num_attributes: 40
+
+model:
+  name: HydraPlus-Net
+  backbone: resnet50
+  pretrained: true
+  num_attributes: 40
+  num_heads: 11
+
+loss:
+  weights:
+    age: 1.0
+    gender: 1.0
+    hair: 1.0
+    upper_length: 1.0
+    upper_color: 1.0
+    lower_length: 1.0
+    lower_color: 1.0
+    lower_type: 1.0
+    bag: 1.0
+    glasses: 1.0
+    hat: 1.0
+
+training:
+  epochs: 10
+  batch_size: 64
+  lr: 0.0003
+  weight_decay: 0.0001
+  amp: true
+  num_workers: 4
+  checkpoint_dir: "checkpoints"
+  reports_dir: "reports"
