@@ -136,6 +136,8 @@ AI-Project/
 │       ├── person_database.json         # CSDL Video Person Database trung tâm (57 bản ghi)
 │       ├── query_results/               # Lưới ảnh kết quả truy vấn (Nữ giới, Áo đen, Re-ID Target)
 │       └── demo/                        # Video Demo Hợp nhất HD (demo_combined_v2_full_attributes.mp4)
+├── requirements.txt                       # Thư viện phụ thuộc của dự án
+├── app.py                                 # Giao diện Web Streamlit FE kết nối Backend AI
 └── README.md                            # Tài liệu Bàn giao Dự án & Hướng dẫn Vận hành Hệ thống
 ```
 
@@ -162,6 +164,12 @@ python -m venv .venv
 
 # 3. Cài đặt các thư viện phụ thuộc
 pip install -r requirements.txt
+```
+
+### 5.2. Khởi chạy Giao diện Web Streamlit (FE connected to BE)
+```powershell
+# Chạy giao diện Web Streamlit FE kết nối toàn bộ Backend AI
+.venv\Scripts\streamlit.exe run app.py
 ```
 
 ### 5.2. Lọc & Truy vấn Đối tượng Trong Video (`tracking/query_persons.py`)
