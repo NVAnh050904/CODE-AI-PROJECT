@@ -68,42 +68,25 @@ Mô hình **`UnifiedPARModel`** ([`models/hydraplus/par_model.py`](file:///c:/Us
 
 ```mermaid
 flowchart TD
-    subgraph InputBackbone ["1. Input & Shared Feature Representation Layer"]
-        Img["Input Pedestrian Crop\n(256 x 128 x 3)"] --> ResNet["ResNet50 Shared Backbone\n(Feature Map: 2048 x 8 x 4)"]
-        ResNet --> Attn["Spatial Attention Module\n(Residual Weighting Map)"]
-        Attn --> Pool["Adaptive Avg Pooling & Flatten\n(Vector 2048-dim)"]
-        Pool --> Proj["Shared Projection Layer\n(Linear 2048 -> 512 + LayerNorm + Dropout)"]
+    In["Ảnh Crop Người (256x128)"] --> Shared["Backbone ResNet50 + Spatial Attention\n(Vector Đặc Trưng Chung 512-dim)"]
+
+    subgraph L1 ["Tầng 1: 5 Vùng Cơ Thể (Body Regions)"]
+        Shared --> R1["1. PERSON (Toàn thân)"]
+        Shared --> R2["2. HEAD (Vùng đầu)"]
+        Shared --> R3["3. UPPER BODY (Thân trên)"]
+        Shared --> R4["4. LOWER BODY (Thân dưới)"]
+        Shared --> R5["5. ACCESSORY (Phụ kiện)"]
     end
 
-    subgraph Level1 ["2. Tầng 1: Phân Phối Vùng Cơ Thể (5 Body Regions)"]
-        Proj --> R_Person["1. PERSON\n(Toàn thân: Age, Gender)"]
-        Proj --> R_Head["2. HEAD\n(Vùng đầu: Hair)"]
-        Proj --> R_Upper["3. UPPER BODY\n(Thân trên: Upper Length, Color)"]
-        Proj --> R_Lower["4. LOWER BODY\n(Thân dưới: Lower Length, Color, Type)"]
-        Proj --> R_Accessory["5. ACCESSORY\n(Phụ kiện: Bag, Glasses, Hat)"]
+    subgraph L2 ["Tầng 2: 11 Đầu Ra Phân Loại (Classification Heads)"]
+        R1 --> H1["age (3-dim)\ngender (1-dim)"]
+        R2 --> H2["hair (3-dim)"]
+        R3 --> H3["upper_length (1-dim)\nupper_color (12-dim)"]
+        R4 --> H4["lower_length (1-dim)\nlower_color (12-dim)\nlower_type (2-dim)"]
+        R5 --> H5["bag (2-dim)\nglasses (2-dim)\nhat (1-dim)"]
     end
 
-    subgraph Level2 ["3. Tầng 2: 11 Classification Heads (Task-Specific Outputs & Loss)"]
-        R_Person --> H_Age["age Head (3-dim)\nSoftmax | Asymmetric Loss"]
-        R_Person --> H_Gender["gender Head (1-dim)\nSigmoid | Weighted BCE Loss"]
-
-        R_Head --> H_Hair["hair Head (3-dim)\nSigmoid | Masked BCE Loss"]
-
-        R_Upper --> H_ULen["upper_length Head (1-dim)\nSigmoid | Weighted BCE Loss"]
-        R_Upper --> H_UCol["upper_color Head (12-dim)\nSigmoid | Masked BCE Loss"]
-
-        R_Lower --> H_LLen["lower_length Head (1-dim)\nSigmoid | Weighted BCE Loss"]
-        R_Lower --> H_LCol["lower_color Head (12-dim)\nSigmoid | Masked BCE Loss"]
-        R_Lower --> H_LType["lower_type Head (2-dim)\nSigmoid | Masked BCE Loss"]
-
-        R_Accessory --> H_Bag["bag Head (2-dim)\nSigmoid | Masked BCE Loss"]
-        R_Accessory --> H_Glasses["glasses Head (2-dim)\nSigmoid | Masked BCE Loss"]
-        R_Accessory --> H_Hat["hat Head (1-dim)\nSigmoid | Weighted BCE Loss"]
-    end
-
-    subgraph OutputVector ["4. Concatenation Vector Đầu Ra 40 Thuộc Tính UPAR"]
-        H_Age & H_Gender & H_Hair & H_ULen & H_UCol & H_LLen & H_LCol & H_LType & H_Bag & H_Glasses & H_Hat --> Out40["Vector 40 Xác Suất Thuộc Tính UPAR Raw\n(40-dim UPAR Probability Vector)"]
-    end
+    H1 & H2 & H3 & H4 & H5 --> Out["Vector 40 Xác Suất Thuộc Tính UPAR"]
 ```
 
 ---
