@@ -11,7 +11,7 @@ Hệ thống cho phép:
 1. **Video Tracking & Quỹ đạo Trajectory (Level 1)**: Theo vết người đi bộ qua từng khung hình video sử dụng YOLOv8 kết hợp ByteTrack.
 2. **Dự đoán Thuộc tính UPAR 40 Nhãn (Level 2)**: Sử dụng mô hình UPAR Multi-Head ResNet50 kết hợp thuật toán *Soft-Probability Temporal Mean Pooling* để dự đoán chính xác và ổn định các thuộc tính (Giới tính, độ tuổi, màu sắc/độ dài trang phục, túi xách, kính, mũ...).
 3. **Trích xuất Feature Embedding Re-ID (Level 3)**: Sử dụng mô hình OSNet (`osnet_x1_0` pretrained MSMT17) trích xuất vector đặc trưng 512 chiều, đo độ tương đồng Cosine Similarity khi người đi bộ vào/ra khỏi khung hình (Re-entry / Cross-camera).
-4. **Cơ sở Dữ liệu Trung tâm & Khử Trùng Lặp Graph (Level 4)**: Tự động gom nhóm các đoạn track bị ngắt đứt/che khuất bằng đồ thị `networkx` (`identity_group_id`), tạo CSDL `person_database.json`.
+4. **Cơ sở Dữ liệu Trung tâm & Khử Trùng Lặp Graph (Level 4)**: Tự động gom nhóm các đoạn track bị ngắt đứt/che khuất bằng đồ thị `networkx` (`identity_group_id`), tạo và tự động mở rộng CSDL `person_database.json` khi chạy pipeline xử lý video mới.
 5. **Engine Lọc & Truy vấn Đối tượng Video (Level 5)**: Hỗ trợ tìm kiếm đối tượng theo nhãn thuộc tính tùy chọn hoặc ảnh mẫu query target trên Terminal, tự động xuất bảng kết quả và lưới ảnh minh họa (Image Grid).
 
 ---
@@ -31,7 +31,7 @@ flowchart TD
     end
 
     subgraph CentralDB ["3. Cơ Sở Dữ Liệu Video Trung Tâm"]
-        DBJSON["Cơ Sở Dữ Liệu person_database.json\n(57 Bản Ghi Video Tracks + Ảnh Crop Đại Diện)"]
+        DBJSON["Cơ Sở Dữ Liệu person_database.json\n(92 Bản Ghi Video Tracks + Ảnh Crop Đại Diện từ 8 Video Domain)"]
     end
 
     subgraph SearchEngine ["4. Engine Lọc & Truy Vấn Đối Tượng (Level 5 - query_persons.py)"]
@@ -133,11 +133,11 @@ AI-Project/
 │   ├── per_attribute_metrics.csv        # Chỉ số chi tiết từng nhãn thuộc tính
 │   ├── training_report.txt              # Báo cáo huấn luyện 11 Classification Heads
 │   └── tracking/                        # CSDL person_database.json, kết quả query & video demo HD
-│       ├── person_database.json         # CSDL Video Person Database trung tâm (57 bản ghi)
+│       ├── person_database.json         # CSDL Video Person Database trung tâm (92 bản ghi từ 8 video)
 │       ├── query_results/               # Lưới ảnh kết quả truy vấn (Nữ giới, Áo đen, Re-ID Target)
 │       └── demo/                        # Video Demo Hợp nhất HD (demo_combined_v2_full_attributes.mp4)
 ├── requirements.txt                       # Thư viện phụ thuộc của dự án
-├── app.py                                 # Giao diện Web Streamlit FE kết nối Backend AI
+├── app.py                                 # Giao diện Web Streamlit FE (Video Analysis, Person Retrieval, H.264 Streaming & SQLite Audit Logs)
 └── README.md                            # Tài liệu Bàn giao Dự án & Hướng dẫn Vận hành Hệ thống
 ```
 
@@ -171,8 +171,12 @@ pip install -r requirements.txt
 # Chạy giao diện Web Streamlit FE kết nối toàn bộ Backend AI
 .venv\Scripts\streamlit.exe run app.py
 ```
+Giao diện Web bao gồm 3 phân hệ chính:
+- **Video Analysis Tab**: Upload hoặc chọn video thử nghiệm, tùy chỉnh `conf_threshold` và `crop_step`. Tự động gọi `run_pipeline.py`, tự động nạp CSDL `person_database.json` (Step 6), và tự động chuyển đổi video sang chuẩn H.264 (`yuv420p`) để xem trực tiếp trên trình duyệt web.
+- **Database Query & Filter Tab**: Lọc đối tượng trong CSDL theo thuộc tính phân cấp (Giới tính, Trang phục, Phụ kiện) kết hợp Cosine Similarity Re-ID với ảnh mẫu. Hỗ trợ hiển thị giao diện khi không tìm thấy kết quả phù hợp mà không gây lỗi.
+- **Recognition History Tab**: Ghi nhận toàn bộ lịch sử truy vấn và thông số lọc vào SQLite DB `recognition_history.db`.
 
-### 5.2. Lọc & Truy vấn Đối tượng Trong Video (`tracking/query_persons.py`)
+### 5.3. Lọc & Truy vấn Đối tượng Trong Video (`tracking/query_persons.py`)
 ```powershell
 # Lệnh 1: Lọc đối tượng Nữ giới trong CSDL Video
 .venv\Scripts\python.exe tracking/query_persons.py --gender Female
@@ -184,25 +188,28 @@ pip install -r requirements.txt
 .venv\Scripts\python.exe tracking/query_persons.py --gender Female --query-image reports/tracking/crops/real_pedestrians/track_1/frame_5.jpg
 ```
 
-### 5.3. Tái tạo Cơ sở Dữ liệu Video Person Database (`tracking/build_person_database.py`)
+### 5.4. Tái tạo & Mở rộng Cơ sở Dữ liệu Video Person Database (`tracking/build_person_database.py`)
 ```powershell
-# Tái tạo file person_database.json từ 4 video CCTV chính thức
+# Tái tạo toàn bộ file person_database.json từ tất cả các video đã xử lý (8 video domain)
 .venv\Scripts\python.exe tracking/build_person_database.py --rebuild-all
+
+# Thêm/Cập nhật 1 video cụ thể vào CSDL mà không phải build lại toàn bộ
+.venv\Scripts\python.exe tracking/build_person_database.py --add-video test5
 ```
 
-### 5.4. Chạy Tự động Toàn bộ Pipeline Tracking Video Stream (`tracking/run_pipeline.py`)
+### 5.5. Chạy Tự động Toàn bộ Pipeline Tracking Video Stream (`tracking/run_pipeline.py`)
 ```powershell
-# Chạy tự động Tracking (YOLOv8+ByteTrack) -> Crop -> UPAR Attribute -> OSNet Re-ID Embedding
+# Chạy tự động Tracking (YOLOv8+ByteTrack) -> Crop -> UPAR Attribute -> OSNet Re-ID Embedding -> Render Video Demo -> Tự động nạp CSDL (Step 6)
 .venv\Scripts\python.exe tracking/run_pipeline.py --video-name real_pedestrians
 ```
 
-### 5.5. Dự đoán Thuộc tính trên 1 Ảnh Đơn lẻ (`inference/predict_image.py`)
+### 5.6. Dự đoán Thuộc tính trên 1 Ảnh Đơn lẻ (`inference/predict_image.py`)
 ```powershell
 # Dự đoán 40 thuộc tính UPAR trên 1 file ảnh cắt người đi bộ
 .venv\Scripts\python.exe inference/predict_image.py --image path/to/pedestrian.jpg
 ```
 
-### 5.6. Huấn luyện & Đánh giá Mô hình UPAR Multi-Head (`training/`)
+### 5.7. Huấn luyện & Đánh giá Mô hình UPAR Multi-Head (`training/`)
 ```powershell
 # Huấn luyện mô hình UPAR Multi-Head trên tập UPAR UNIFIED
 .venv\Scripts\python.exe training/train.py --config configs/upar.yaml
@@ -211,7 +218,7 @@ pip install -r requirements.txt
 .venv\Scripts\python.exe training/evaluate.py --config configs/upar.yaml
 ```
 
-### 5.7. Chạy Bộ Kiểm thử Tự động (System Unit Tests)
+### 5.8. Chạy Bộ Kiểm thử Tự động (System Unit Tests)
 ```powershell
 # Bật mã hóa UTF-8 và chạy bộ 3 file kiểm thử hệ thống
 $env:PYTHONIOENCODING="utf-8"
@@ -256,8 +263,9 @@ $env:PYTHONIOENCODING="utf-8"
 * **Tỷ lệ tăng tốc**: **Tăng 3.79 lần (Gấp ~3.8x)**, vượt ngưỡng xử lý Real-time (25 FPS) trên GPU mà vẫn duy trì độ chính xác cao nhờ gom nhóm xác suất Temporal Mean Pooling.
 
 ### 6.4. Hiệu năng Engine Lọc Đối tượng Video (`query_persons.py`)
-* **Kịch bản Lọc `--gender Female`**: Lọc 23 bản ghi khớp -> Tự động khử trùng lặp GT identity bằng `networkx` xuống **10 cá nhân độc lập**.
-* **Kịch bản Lọc `--upper_color Black`**: Lọc 29 bản ghi khớp -> Khử trùng lặp xuống **10 cá nhân độc lập** từ cả 4 video CCTV.
+* **Quy mô CSDL**: **92 bản ghi video tracks** mở rộng linh hoạt trên 8 video domain.
+* **Kịch bản Lọc `--gender Female`**: Lọc 38 bản ghi khớp -> Tự động khử trùng lặp GT identity bằng `networkx` xuống các cá nhân độc lập.
+* **Kịch bản Lọc `--upper_color Black`**: Lọc 43 bản ghi khớp -> Khử trùng lặp xuống các cá nhân độc lập trên tất cả các video CCTV.
 
 ---
 
@@ -274,8 +282,10 @@ Toàn bộ mã nguồn dự án tuân thủ nghiêm ngặt quy định:
 
 1. **Mã nguồn Hệ thống**:
    - Thư mục [`tracking/`](file:///c:/Users/ADMIN/OneDrive/Documents/GitHub/AI-Project/tracking/), [`models/`](file:///c:/Users/ADMIN/OneDrive/Documents/GitHub/AI-Project/models/), [`training/`](file:///c:/Users/ADMIN/OneDrive/Documents/GitHub/AI-Project/training/), [`inference/`](file:///c:/Users/ADMIN/OneDrive/Documents/GitHub/AI-Project/inference/), [`datasets/`](file:///c:/Users/ADMIN/OneDrive/Documents/GitHub/AI-Project/datasets/), [`tests/`](file:///c:/Users/ADMIN/OneDrive/Documents/GitHub/AI-Project/tests/).
+   - Web Streamlit GUI: [`app.py`](file:///c:/Users/ADMIN/OneDrive/Documents/GitHub/AI-Project/app.py).
 2. **Cơ sở Dữ liệu Trung tâm**:
-   - File JSON CSDL: [`reports/tracking/person_database.json`](file:///c:/Users/ADMIN/OneDrive/Documents/GitHub/AI-Project/reports/tracking/person_database.json) (57 bản ghi video tracks + representative crops).
+   - File JSON CSDL: [`reports/tracking/person_database.json`](file:///c:/Users/ADMIN/OneDrive/Documents/GitHub/AI-Project/reports/tracking/person_database.json) (92 bản ghi video tracks + representative crops từ 8 video domain).
+   - Database lịch sử nhận diện & truy vấn SQLite: [`recognition_history.db`](file:///c:/Users/ADMIN/OneDrive/Documents/GitHub/AI-Project/recognition_history.db).
 3. **Tài liệu Báo cáo Kỹ thuật**:
    - [`tracking/README.md`](file:///c:/Users/ADMIN/OneDrive/Documents/GitHub/AI-Project/tracking/README.md): Hướng dẫn vận hành chi tiết các module tracking, crop extraction và demo generator.
    - [`tracking/TECHNICAL_REPORT.md`](file:///c:/Users/ADMIN/OneDrive/Documents/GitHub/AI-Project/tracking/TECHNICAL_REPORT.md): Báo cáo kỹ thuật công thức toán học EER & Re-ID benchmark.

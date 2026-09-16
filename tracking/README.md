@@ -20,9 +20,9 @@ pip install ultralytics opencv-python torchreid networkx pandas
 
 ## 2. Hướng dẫn Vận hành theo 4 Level & Pipeline Tự Động
 
-### ⚡ Script Điều Phối Tự Động 1 Lệnh (`run_pipeline.py`)
+### Script Điều Phối Tự Động 1 Lệnh (`run_pipeline.py`)
 
-Để chạy toàn bộ Pipeline từ Video gốc đến Video Demo V2 hoàn chỉnh (bao gồm 4 bước tự động: Tracking, Crop Extraction, Attribute Aggregation, Re-ID Embedding và bước tạo Combined Demo Video) chỉ với **1 câu lệnh duy nhất**:
+Để chạy toàn bộ Pipeline từ Video gốc đến Video Demo V2 hoàn chỉnh (bao gồm 6 bước tự động: Tracking, Crop Extraction, Attribute Aggregation, Re-ID Embedding, Combined Demo Video Generation và Tự động nạp CSDL `person_database.json`) chỉ với **1 câu lệnh duy nhất**:
 
 ```powershell
 python tracking/run_pipeline.py --video-name store-aisle-detection
@@ -159,7 +159,7 @@ tracking/
 ├── __init__.py
 ├── README.md                               # Hướng dẫn sử dụng module tracking
 ├── TECHNICAL_REPORT.md                     # Báo cáo kỹ thuật & kết quả nghiên cứu 4 Level
-├── run_pipeline.py                         # Orchestrator tự động hóa 4 bước (Tracking, Crop, Attribute, Embedding) + Video Demo V2
+├── run_pipeline.py                         # Orchestrator tự động hóa 6 bước (Tracking, Crop, Attribute, Embedding, Demo, CSDL Auto-Index)
 ├── track.py                                # Level 1: YOLOv8 + ByteTrack tracking pipeline
 ├── extract_crops.py                        # Level 2: Trích crop ảnh người theo track_id
 ├── track_attributes.py                     # Level 2: Gom nhóm xác suất 40 thuộc tính UPAR
@@ -167,6 +167,8 @@ tracking/
 ├── reid_validate_domain.py                 # Level 3: Validate similarity trên real video
 ├── reid_validate_reentry.py                # Level 3: Validate Re-entry & Chống Pseudo-replication
 ├── reid_validate_reentry_combined.py       # Level 3: Benchmark Re-ID trên 4 video
+├── build_person_database.py                # Level 4: Gom nhóm identity Graph NetworkX & xây dựng person_database.json
+├── query_persons.py                        # Level 5: Engine lọc đối tượng theo thuộc tính UPAR & Re-ID Target Image
 ├── hybrid_matching.py                      # Level 4: Hybrid Score & LOOCV Grid Search
 ├── demo_combined.py                        # Video Demo Hợp nhất V2 (Canvas 960x360 + UPAR Side Panel)
 └── test_videos/                            # Thư mục lưu trữ video thử nghiệm mẫu (.mp4, .avi)
